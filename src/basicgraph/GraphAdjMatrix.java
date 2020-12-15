@@ -105,7 +105,28 @@ public class GraphAdjMatrix extends Graph {
 	 */	
 	public List<Integer> getDistance2(int v) {
 		// XXX Implement this method in week 2
-		return null;
+
+		System.out.println("requested v "+v);
+		System.out.println("len "+adjMatrix.length);
+
+		if(v>=adjMatrix.length) throw new IndexOutOfBoundsException();
+
+		List<Integer>result = new ArrayList<Integer>();
+		int sum=0;
+
+		// vortex matrix multiplication
+		for(int j=0; j<adjMatrix.length;j++){
+			for(int i=0; i<adjMatrix[v].length;i++){
+				sum+= adjMatrix[v][i]*adjMatrix[i][j];
+			}
+
+			while(sum>0){
+				result.add(j);
+				sum--;
+			}
+		}
+		return result;
+		
 	}
 	
 	/**

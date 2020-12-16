@@ -1,5 +1,5 @@
 /**
- * @author UCSD MOOC development team and YOU
+ * @author UCSD MOOC development team and Vishesh Shukla
  * 
  * A class which reprsents a graph of geographic locations
  * Nodes in the graph are intersections between 
@@ -7,8 +7,13 @@
  */
 package roadgraph;
 
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -16,7 +21,7 @@ import geography.GeographicPoint;
 import util.GraphLoader;
 
 /**
- * @author UCSD MOOC development team and YOU
+ * @author UCSD MOOC development team and Vishesh Shukla
  * 
  * A class which represents a graph of geographic locations
  * Nodes in the graph are intersections between 
@@ -25,6 +30,9 @@ import util.GraphLoader;
 public class MapGraph {
 	//TODO: Add your member variables here in WEEK 3
 	
+	private Map<GeographicPoint, Intersection> grid;
+	private int numVerticies;
+	private int numEdges;	
 	
 	/** 
 	 * Create a new empty MapGraph 
@@ -32,6 +40,11 @@ public class MapGraph {
 	public MapGraph()
 	{
 		// TODO: Implement in this constructor in WEEK 3
+		
+		grid = new HashMap<GeographicPoint, Intersection>();
+		numVerticies=0;
+		numEdges=0;
+		
 	}
 	
 	/**
@@ -41,7 +54,9 @@ public class MapGraph {
 	public int getNumVertices()
 	{
 		//TODO: Implement this method in WEEK 3
-		return 0;
+		
+		return numVerticies;
+		
 	}
 	
 	/**
@@ -51,7 +66,9 @@ public class MapGraph {
 	public Set<GeographicPoint> getVertices()
 	{
 		//TODO: Implement this method in WEEK 3
-		return null;
+		
+		return grid.keySet();
+		
 	}
 	
 	/**
@@ -61,7 +78,9 @@ public class MapGraph {
 	public int getNumEdges()
 	{
 		//TODO: Implement this method in WEEK 3
-		return 0;
+		
+		return numEdges;
+		
 	}
 
 	
@@ -76,7 +95,17 @@ public class MapGraph {
 	public boolean addVertex(GeographicPoint location)
 	{
 		// TODO: Implement this method in WEEK 3
-		return false;
+
+		if(location ==null || grid.containsKey(location)){
+			return false;
+		}
+
+		Intersection elem = new Intersection(location);
+
+		grid.put(location, elem);
+		numVerticies++;
+		return true;
+		
 	}
 	
 	/**
@@ -95,6 +124,10 @@ public class MapGraph {
 			String roadType, double length) throws IllegalArgumentException {
 
 		//TODO: Implement this method in WEEK 3
+		
+		Intersection fromElem = grid.get(from);
+		fromElem.addNeighbor(grid.get(to), roadName, roadType,length);
+		numEdges++;
 		
 	}
 	
@@ -128,7 +161,62 @@ public class MapGraph {
 		// Hook for visualization.  See writeup.
 		//nodeSearched.accept(next.getLocation());
 
-		return null;
+		if(start == null || goal==null){
+			return null;
+		}
+
+		Intersection startItem = grid.get(start);
+		Intersection endItem = grid.get(goal);
+		Map<Intersection,Intersection> parentMap = new HashMap<Intersection,Intersection>();
+
+		boolean found = bfsSuccessful(startItem,endItem,parentMap, nodeSearched);
+		if(!found){
+			return null;
+		}
+		return constructPath(goal, parentMap);
+
+	}
+	
+	private List<GeographicPoint> constructPath (GeographicPoint goal, Map<Intersection,Intersection> parentMap){
+
+		LinkedList<GeographicPoint> path = new LinkedList<GeographicPoint>();
+		path.addFirst(goal);
+		Intersection item = grid.get(goal);
+
+		while(parentMap.containsKey(item)){
+			Intersection elem = parentMap.get(item);
+			path.addFirst(elem.getLocation());
+			item = elem;
+		}
+		return path;
+	}
+	
+	private boolean bfsSuccessful(Intersection start, Intersection end,
+			Map<Intersection,Intersection> parentMap, Consumer<GeographicPoint> nodeSearched){
+		Queue<Intersection> q = new LinkedList<Intersection>();
+		Set<Intersection> visited = new HashSet<Intersection>();
+		q.add(start);
+		visited.add(start);
+
+		while(!q.isEmpty()){
+			Intersection elem = q.poll();
+
+			// Hook for visualization. 
+			nodeSearched.accept(elem.getLocation());
+
+			if(elem.equals(end)){
+				return true;
+			}
+			for(Edge child: elem.getEdges()){
+				Intersection i = child.getIntersection();
+				if(!visited.contains(i)){
+					q.add(i);
+					visited.add(i);
+					parentMap.put(i, elem);
+				}
+			}
+		}
+		return false;
 	}
 	
 
